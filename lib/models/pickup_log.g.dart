@@ -24,13 +24,14 @@ class PickupLogAdapter extends TypeAdapter<PickupLog> {
       lat: fields[4] as double,
       lng: fields[5] as double,
       confirmedByHousehold: fields[6] as bool,
+      synced: fields[7] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, PickupLog obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.workerId)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class PickupLogAdapter extends TypeAdapter<PickupLog> {
       ..writeByte(5)
       ..write(obj.lng)
       ..writeByte(6)
-      ..write(obj.confirmedByHousehold);
+      ..write(obj.confirmedByHousehold)
+      ..writeByte(7)
+      ..write(obj.synced);
   }
 
   @override

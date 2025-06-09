@@ -25,6 +25,9 @@ class PickupLog extends HiveObject {
   @HiveField(6)
   bool confirmedByHousehold;
 
+  @HiveField(7)
+  bool synced;
+
   PickupLog({
     required this.workerId,
     required this.householdId,
@@ -33,5 +36,6 @@ class PickupLog extends HiveObject {
     required this.lat,
     required this.lng,
     this.confirmedByHousehold = false,
+    this.synced = false,
   });
 }
