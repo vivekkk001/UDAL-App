@@ -28,6 +28,10 @@ class PickupLog extends HiveObject {
   @HiveField(7)
   bool synced;
 
+  @HiveField(8)
+  String? address;
+
+
   PickupLog({
     required this.workerId,
     required this.householdId,
@@ -35,6 +39,7 @@ class PickupLog extends HiveObject {
     required this.timestamp,
     required this.lat,
     required this.lng,
+    this.address,
     this.confirmedByHousehold = false,
     this.synced = false,
   });
