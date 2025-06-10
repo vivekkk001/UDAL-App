@@ -31,6 +31,15 @@ class PickupLog extends HiveObject {
   @HiveField(8)
   String? address;
 
+  @HiveField(9)
+  String? paymentMethod; 
+
+  @HiveField(10)
+  String? paymentStatus;
+
+  @HiveField(11)
+  String? paymentAmount; 
+
 
   PickupLog({
     required this.workerId,
@@ -39,6 +48,9 @@ class PickupLog extends HiveObject {
     required this.timestamp,
     required this.lat,
     required this.lng,
+    required this.paymentAmount,
+    required this.paymentMethod,
+    required this.paymentStatus,
     this.address,
     this.confirmedByHousehold = false,
     this.synced = false,

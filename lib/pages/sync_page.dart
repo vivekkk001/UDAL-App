@@ -7,6 +7,8 @@ import 'dart:convert';
 import '../config/api_keys.dart'; // ensure this exports googleMapsApiKey
 
 class SyncPage extends StatefulWidget {
+  const SyncPage({super.key});
+
   @override
   _SyncPageState createState() => _SyncPageState();
 }
@@ -93,8 +95,9 @@ class _SyncPageState extends State<SyncPage> {
       body: FutureBuilder<List<PickupLog>>(
         future: _logsFuture,
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
+          }
 
           final logs = snapshot.data!;
           if (logs.isEmpty) return Center(child: Text("No pickups found"));
@@ -110,7 +113,7 @@ class _SyncPageState extends State<SyncPage> {
               return ListTile(
                 leading: Icon(Icons.local_shipping),
                 title: Text("House Number: ${log.householdId}"),
-                subtitle: Text(
+                subtitle: Text("Pickup Confirmed by ${log.householdId}\n"
                   "Date and Time: ${log.timestamp}\n"
                   "Latitude: ${log.lat}, Longitude: ${log.lng}\n"
                   "Address: ${log.address ?? 'No address (yet)'}\n$imageNote",

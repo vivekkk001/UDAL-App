@@ -17,15 +17,19 @@ class PickupLogAdapter extends TypeAdapter<PickupLog> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return PickupLog(
-      workerId: fields[0] as String,
-      householdId: fields[1] as String,
-      photoUrl: fields[2] as String,
-      timestamp: fields[3] as DateTime,
-      lat: fields[4] as double,
-      lng: fields[5] as double,
-      confirmedByHousehold: fields[6] as bool,
-      synced: fields[7] as bool,
-    );
+  workerId: fields[0] as String,
+  householdId: fields[1] as String,
+  photoUrl: fields[2] as String,
+  timestamp: fields[3] as DateTime,
+  lat: fields[4] as double,
+  lng: fields[5] as double,
+  paymentAmount: fields[6] as String,        // Added
+  paymentMethod: fields[7] as String,        // Added
+  paymentStatus: fields[8] as String,        // Added
+  address: fields[9] as String?,             // Added (optional)
+  confirmedByHousehold: fields[10] as bool,  // Moved from index 6
+  synced: fields[11] as bool,                // Moved from index 7
+);
   }
 
   @override
