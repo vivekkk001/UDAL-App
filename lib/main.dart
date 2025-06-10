@@ -3,8 +3,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'models/pickup_log.dart';
 import 'services/db_service.dart';
 import 'pages/home_page.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'pages/login_page.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,12 +21,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Pickup Logger',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const LoginPage(), // Start with LoginPage instead of HomePage
+      title: 'Municipality Pickup Logger',
+      theme: AppTheme.lightTheme,
+      home: const LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }
