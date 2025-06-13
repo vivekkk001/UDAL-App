@@ -7,6 +7,7 @@ import '../widgets/status_card.dart';
 import 'package:hive/hive.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../config/api_keys.dart';
 
 class SyncPage extends StatefulWidget {
   const SyncPage({super.key});
@@ -58,17 +59,35 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
 
       for (var log in unsynced) {
         try {
-          // Simulate API call delay
-          await Future.delayed(const Duration(milliseconds: 500));
-          
-          // Mock address resolution
-          log.address = 'Mock Address: ${log.lat.toStringAsFixed(4)}, ${log.lng.toStringAsFixed(4)}';
+          // 1. Build the request URL for Google Maps API
+          final url = Uri.parse(
+            'https://maps.googleapis.com/maps/api/geocode/json?latlng=${log.lat},${log.lng}&key=$googleMapsApiKey',
+          );
+
+          // 2. Make the HTTP request
+          final response = await http.get(url);
+          String fetchedAddress = 'Error: Could not fetch address.';
+
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            if (data['status'] == 'OK' && data['results'].isNotEmpty) {
+              // 3. Extract the formatted address from the response
+              fetchedAddress = data['results'][0]['formatted_address'];
+            } else {
+              fetchedAddress = 'Error: ${data['status']}';
+            }
+          }
+
+          // 4. Format the final string and save the log
+          log.address =
+              'Latitude: ${log.lat.toStringAsFixed(4)}, Longitude: ${log.lng.toStringAsFixed(4)}\nAddress: $fetchedAddress';
           log.synced = true;
           await log.save();
         } catch (e) {
-          print("❗ Exception during sync: $e");
-          log.address = 'Error Fetching Address';
-          log.synced = true;
+          print("❗ Exception during sync for log ${log.key}: $e");
+          log.address =
+              'Latitude: ${log.lat.toStringAsFixed(4)}, Longitude: ${log.lng.toStringAsFixed(4)}\nAddress: Error Fetching Address';
+          log.synced = true; // Mark as synced to avoid retrying a faulty record
           await log.save();
         }
       }
@@ -94,7 +113,7 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
           children: [
             Icon(Icons.delete_forever, color: AppTheme.errorRed),
             const SizedBox(width: 8),
-            const Text('Delete Synced Records'),
+            const Text('Delete'),
           ],
         ),
         content: const Text(
@@ -125,7 +144,10 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
 
     try {
       await db.deleteSynced();
-      _showSnackBar('🗑️ Synced records deleted successfully', StatusType.success);
+      _showSnackBar(
+        '🗑️ Synced records deleted successfully',
+        StatusType.success,
+      );
       _refreshLogs();
     } catch (e) {
       _showSnackBar('❌ Failed to delete records: $e', StatusType.error);
@@ -139,7 +161,7 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
   void _showSnackBar(String message, StatusType type) {
     Color backgroundColor;
     IconData icon;
-    
+
     switch (type) {
       case StatusType.success:
         backgroundColor = AppTheme.successGreen;
@@ -180,7 +202,19 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pickup Records'),
-        backgroundColor: AppTheme.primaryGreen,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF20B2AA), // Light Sea Green
+                Color(0xFF008B8B), // Dark Cyan
+              ],
+              stops: [0.0, 1.0],
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -200,10 +234,10 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppTheme.primaryGreen,
-              AppTheme.backgroundLight,
+              Color(0xFF008B8B), // Dark Cyan - continues from AppBar
+              Color(0xFF006666), // Darker Teal
             ],
-            stops: [0.0, 0.2],
+            stops: [0.0, 1.0],
           ),
         ),
         child: Column(
@@ -232,16 +266,16 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                       children: [
                         Text(
                           'Pickup Records',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         Text(
                           'Manage and sync your data',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.8),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.white.withOpacity(0.8)),
                         ),
                       ],
                     ),
@@ -249,7 +283,7 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            
+
             // Action Buttons
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -268,7 +302,7 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                   const SizedBox(width: 12),
                   Expanded(
                     child: CustomButton(
-                      text: 'Delete Synced',
+                      text: 'Clear Data',
                       icon: Icons.delete_sweep,
                       onPressed: _deleteSynced,
                       isLoading: _isDeleting,
@@ -279,9 +313,9 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Records List
             Expanded(
               child: Container(
@@ -295,7 +329,9 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.primaryGreen,
+                          ),
                         ),
                       );
                     }
@@ -306,7 +342,8 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                           padding: const EdgeInsets.all(24),
                           child: StatusCard(
                             title: 'Error Loading Records',
-                            message: 'Failed to load pickup records: ${snapshot.error}',
+                            message:
+                                'Failed to load pickup records: ${snapshot.error}',
                             type: StatusType.error,
                           ),
                         ),
@@ -314,7 +351,7 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                     }
 
                     final logs = snapshot.data!;
-                    
+
                     if (logs.isEmpty) {
                       return Center(
                         child: Padding(
@@ -330,16 +367,16 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                               const SizedBox(height: 16),
                               Text(
                                 'No Pickup Records',
-                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(color: Colors.grey[600]),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Start by adding your first pickup record',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.grey[500],
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: Colors.grey[500]),
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -374,7 +411,10 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                                   Expanded(
                                     child: _buildSummaryItem(
                                       'Synced',
-                                      logs.where((log) => log.synced).length.toString(),
+                                      logs
+                                          .where((log) => log.synced)
+                                          .length
+                                          .toString(),
                                       Icons.cloud_done,
                                       AppTheme.successGreen,
                                     ),
@@ -387,7 +427,10 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                                   Expanded(
                                     child: _buildSummaryItem(
                                       'Pending',
-                                      logs.where((log) => !log.synced).length.toString(),
+                                      logs
+                                          .where((log) => !log.synced)
+                                          .length
+                                          .toString(),
                                       Icons.cloud_off,
                                       AppTheme.accentGold,
                                     ),
@@ -397,7 +440,7 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                             ),
                           ),
                         ),
-                        
+
                         // Records List
                         Expanded(
                           child: ListView.builder(
@@ -421,7 +464,12 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, IconData icon, Color color) {
+  Widget _buildSummaryItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -435,9 +483,9 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
         ),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey[600],
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
       ],
@@ -458,14 +506,16 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: log.synced 
+                    color: log.synced
                         ? AppTheme.successGreen.withOpacity(0.1)
                         : AppTheme.accentGold.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     log.synced ? Icons.cloud_done : Icons.cloud_off,
-                    color: log.synced ? AppTheme.successGreen : AppTheme.accentGold,
+                    color: log.synced
+                        ? AppTheme.successGreen
+                        : AppTheme.accentGold,
                     size: 20,
                   ),
                 ),
@@ -476,9 +526,8 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                     children: [
                       Text(
                         'Household: ${log.householdId}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         'Worker: ${log.workerId}',
@@ -490,15 +539,18 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: log.synced 
+                    color: log.synced
                         ? AppTheme.successGreen
                         : AppTheme.accentGold,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    log.synced ? 'Synced' : 'Pending',
+                    log.synced ? 'Sync Completed' : 'Sync Pending',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -507,9 +559,9 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Details Grid
             Container(
               padding: const EdgeInsets.all(12),
@@ -520,6 +572,12 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
               child: Column(
                 children: [
                   _buildDetailRow(
+                    Icons.done,
+                    'Pickup Confirmed by ${log.householdId}',
+                    '',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildDetailRow(
                     Icons.access_time,
                     'Date & Time',
                     '${log.timestamp.day}/${log.timestamp.month}/${log.timestamp.year} at ${log.timestamp.hour}:${log.timestamp.minute.toString().padLeft(2, '0')}',
@@ -528,7 +586,8 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                   _buildDetailRow(
                     Icons.location_on,
                     'Location',
-                    log.address ?? 'Lat: ${log.lat.toStringAsFixed(4)}, Lng: ${log.lng.toStringAsFixed(4)}',
+                    log.address ??
+                        'Latitude: ${log.lat.toStringAsFixed(4)}, Longitude: ${log.lng.toStringAsFixed(4)}',
                   ),
                   const SizedBox(height: 8),
                   _buildDetailRow(
@@ -536,7 +595,8 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
                     'Payment',
                     '${log.paymentMethod ?? 'N/A'} - ${log.paymentStatus ?? 'Pending'}',
                   ),
-                  if (log.paymentAmount != null && log.paymentAmount!.isNotEmpty) ...[
+                  if (log.paymentAmount != null &&
+                      log.paymentAmount!.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     _buildDetailRow(
                       Icons.currency_rupee,
@@ -578,9 +638,9 @@ class _SyncPageState extends State<SyncPage> with TickerProviderStateMixin {
         Expanded(
           child: Text(
             value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textDark,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.textDark),
           ),
         ),
       ],

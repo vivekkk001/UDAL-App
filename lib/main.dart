@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/pickup_log.dart';
-import 'services/db_service.dart';
-import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'theme/app_theme.dart';
 

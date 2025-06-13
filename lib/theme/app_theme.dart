@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Color Palette - Eco-Tech Green to Teal
-  static const Color primaryGreen = Color(0xFF2A9D8F);
-  static const Color secondaryTeal = Color(0xFF26A69A);
+  static const Color primaryGreen = Color.fromARGB(255, 22, 149, 134);
+  static const Color secondaryTeal = Color.fromARGB(255, 43, 149, 138);
   static const Color accentGold = Color(0xFFE9C46A);
   static const Color backgroundLight = Color(0xFFF8F9FA);
   static const Color textDark = Color(0xFF212529);
@@ -111,13 +111,11 @@ class AppTheme {
         color: Colors.white,
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: cardWhite,
       elevation: 2,
       shadowColor: shadowColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -125,13 +123,8 @@ class AppTheme {
         foregroundColor: textDark,
         elevation: 2,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        textStyle: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -139,13 +132,8 @@ class AppTheme {
         foregroundColor: primaryGreen,
         side: const BorderSide(color: primaryGreen, width: 2),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        textStyle: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -173,27 +161,16 @@ class AppTheme {
         color: textDark,
         fontWeight: FontWeight.w500,
       ),
-      hintStyle: GoogleFonts.inter(
-        fontSize: 16,
-        color: Colors.grey[600],
-      ),
+      hintStyle: GoogleFonts.inter(fontSize: 16, color: Colors.grey[600]),
     ),
   );
 
   // Custom Shadows
   static List<BoxShadow> get cardShadow => [
-    BoxShadow(
-      color: shadowColor,
-      blurRadius: 8,
-      offset: const Offset(0, 2),
-    ),
+    BoxShadow(color: shadowColor, blurRadius: 8, offset: const Offset(0, 2)),
   ];
 
   static List<BoxShadow> get buttonShadow => [
-    BoxShadow(
-      color: shadowColor,
-      blurRadius: 4,
-      offset: const Offset(0, 2),
-    ),
+    BoxShadow(color: shadowColor, blurRadius: 4, offset: const Offset(0, 2)),
   ];
 }

@@ -17,12 +17,14 @@ class CustomTextField extends StatelessWidget {
   final int maxLines;
   final String? errorText;
   final bool isRequired;
+  final FocusNode? focusNode;
 
   const CustomTextField({
     super.key,
     required this.label,
     this.hintText,
     this.controller,
+    this.focusNode,
     this.prefixIcon,
     this.suffixIcon,
     this.onSuffixIconPressed,
@@ -65,6 +67,7 @@ class CustomTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          focusNode: focusNode,
           validator: validator,
           onChanged: onChanged,
           onFieldSubmitted: onSubmitted,

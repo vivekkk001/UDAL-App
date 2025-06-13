@@ -14,7 +14,7 @@ import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   final String workerId;
-  
+
   const HomePage({super.key, required this.workerId});
 
   @override
@@ -26,6 +26,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final workerCtrl = TextEditingController();
   final houseCtrl = TextEditingController();
   final amountCtrl = TextEditingController();
+  final FocusNode _houseFocusNode = FocusNode();
+  final FocusNode _amountFocusNode = FocusNode();
   XFile? _pickedImage;
 
   double? lat;
@@ -37,6 +39,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool showCashForm = false;
   bool _isLocationLoading = false;
   bool _isSaving = false;
+  bool _paymentStatusChecked = false; // New state for payment status check
 
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
@@ -45,22 +48,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     workerCtrl.text = widget.workerId;
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeInOut,
-    ));
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeInOut),
+        );
   }
 
   @override
   void dispose() {
+    _houseFocusNode.dispose();
+    _amountFocusNode.dispose();
     _slideController.dispose();
     workerCtrl.dispose();
     houseCtrl.dispose();
@@ -73,7 +75,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Icon(Icons.logout, color: AppTheme.errorRed),
@@ -129,7 +133,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       }
 
       if (permission == LocationPermission.deniedForever) {
-        _showSnackBar('Location permission permanently denied', StatusType.error);
+        _showSnackBar(
+          'Location permission permanently denied',
+          StatusType.error,
+        );
         return;
       }
 
@@ -152,10 +159,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  // New method for checking payment status
+  void _checkPaymentStatus() {
+    setState(() {
+      _paymentStatusChecked = true;
+    });
+    _showSnackBar('Payment Complete', StatusType.info);
+  }
+
   void _showSnackBar(String message, StatusType type) {
     Color backgroundColor;
     IconData icon;
-    
+
     switch (type) {
       case StatusType.success:
         backgroundColor = AppTheme.successGreen;
@@ -216,9 +231,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             const SizedBox(height: 20),
             Text(
               'Select Payment Method',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             CustomButton(
@@ -238,8 +253,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             CustomButton(
               text: 'Cash Payment',
               icon: Icons.payments,
-              isPrimary: false,
               onPressed: () {
+                // Changed from isPrimary: false to default primary styling
                 Navigator.pop(context);
                 setState(() {
                   selectedPaymentMethod = 'CASH';
@@ -328,6 +343,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       showPaymentOptions = false;
       showQRCode = false;
       showCashForm = false;
+      _paymentStatusChecked = false; // Reset payment status check
     });
     _slideController.reset();
   }
@@ -337,7 +353,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Pickup'),
-        backgroundColor: AppTheme.primaryGreen,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF20B2AA), // Light Sea Green
+                Color(0xFF008B8B), // Dark Cyan
+              ],
+              stops: [0.0, 1.0],
+            ),
+          ),
+        ),
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -376,10 +404,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppTheme.primaryGreen,
-              AppTheme.backgroundLight,
+              Color(0xFF008B8B), // Dark Cyan - continues from AppBar
+              Color(0xFF006666), // Darker Teal
             ],
-            stops: [0.0, 0.3],
+            stops: [0.0, 1.0],
           ),
         ),
         child: Column(
@@ -408,16 +436,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       children: [
                         Text(
                           'New Pickup Entry',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         Text(
                           'Fill in the details below',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.8),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.white.withOpacity(0.8)),
                         ),
                       ],
                     ),
@@ -425,7 +453,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            
+
             // Form Section
             Expanded(
               child: Container(
@@ -440,33 +468,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     children: [
                       // Basic Information Card
                       _buildBasicInfoCard(),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Location Card
                       _buildLocationCard(),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Photo Card
                       _buildPhotoCard(),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Payment Card
                       _buildPaymentCard(),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Payment Forms
                       if (showQRCode || showCashForm)
                         SlideTransition(
                           position: _slideAnimation,
-                          child: showQRCode ? _buildUPIForm() : _buildCashForm(),
+                          child: showQRCode
+                              ? _buildUPIForm()
+                              : _buildCashForm(),
                         ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Action Buttons
                       _buildActionButtons(),
                     ],
@@ -493,9 +523,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 const SizedBox(width: 8),
                 Text(
                   'Basic Information',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -511,8 +541,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               label: 'Household ID',
               hintText: 'Enter household identifier',
               controller: houseCtrl,
+              focusNode: _houseFocusNode,
               prefixIcon: Icons.home,
               isRequired: true,
+            ),
+            const SizedBox(height: 16),
+            CustomButton(
+              text: _paymentStatusChecked
+                  ? 'Payment Complete'
+                  : 'Check Payment Status',
+              icon: _paymentStatusChecked ? Icons.check_circle : Icons.payment,
+              onPressed: _paymentStatusChecked ? null : _checkPaymentStatus,
+              backgroundColor: _paymentStatusChecked
+                  ? AppTheme.successGreen
+                  : AppTheme.accentGold,
+              textColor: _paymentStatusChecked ? Colors.white : null,
             ),
           ],
         ),
@@ -533,9 +576,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 const SizedBox(width: 8),
                 Text(
                   'Location',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -543,24 +586,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             if (lat != null && lng != null)
               StatusCard(
                 title: 'Location Captured',
-                message: 'Lat: ${lat!.toStringAsFixed(6)}, Lng: ${lng!.toStringAsFixed(6)}',
+                message:
+                    'Lat: ${lat!.toStringAsFixed(6)}, Lng: ${lng!.toStringAsFixed(6)}',
                 type: StatusType.success,
                 icon: Icons.gps_fixed,
               )
             else
               StatusCard(
                 title: 'Location Required',
-                message: 'Tap the button below to capture your current location',
+                message:
+                    'Tap the button below to capture your current location',
                 type: StatusType.warning,
                 icon: Icons.gps_not_fixed,
               ),
             const SizedBox(height: 16),
             CustomButton(
-              text: lat != null && lng != null ? 'Update Location' : 'Capture Location',
+              text: lat != null && lng != null
+                  ? 'Update Location'
+                  : 'Capture Location',
               icon: Icons.my_location,
               onPressed: _getLocation,
               isLoading: _isLocationLoading,
-              backgroundColor: lat != null && lng != null ? AppTheme.successGreen : null,
+              backgroundColor: lat != null && lng != null
+                  ? AppTheme.successGreen
+                  : null,
             ),
           ],
         ),
@@ -581,9 +630,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 const SizedBox(width: 8),
                 Text(
                   'Photo Documentation',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -596,13 +645,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.successGreen, width: 2),
+                      border: Border.all(
+                        color: AppTheme.successGreen,
+                        width: 2,
+                      ),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: kIsWeb
                           ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
-                          : Image.file(File(_pickedImage!.path), fit: BoxFit.cover),
+                          : Image.file(
+                              File(_pickedImage!.path),
+                              fit: BoxFit.cover,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -625,7 +680,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               text: _pickedImage != null ? 'Retake Photo' : 'Take Photo',
               icon: Icons.camera_alt,
               onPressed: _takePhoto,
-              backgroundColor: _pickedImage != null ? AppTheme.successGreen : null,
+              backgroundColor: _pickedImage != null
+                  ? AppTheme.successGreen
+                  : null,
             ),
           ],
         ),
@@ -646,9 +703,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 const SizedBox(width: 8),
                 Text(
                   'Payment',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -657,7 +714,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               StatusCard(
                 title: 'Payment Status',
                 message: '$selectedPaymentMethod - $paymentStatus',
-                type: paymentStatus == 'Payment Received' ? StatusType.success : StatusType.warning,
+                type: paymentStatus == 'Payment Received'
+                    ? StatusType.success
+                    : StatusType.warning,
               )
             else
               StatusCard(
@@ -667,10 +726,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 icon: Icons.payment,
               ),
             const SizedBox(height: 16),
+            // Updated Select Payment Method button
             CustomButton(
-              text: 'Select Payment Method',
-              icon: Icons.payment,
-              onPressed: _showPaymentDialog,
+              text: paymentStatus == 'Payment Received'
+                  ? 'Payment Received'
+                  : 'Select Payment Method',
+              icon: paymentStatus == 'Payment Received'
+                  ? Icons.check_circle
+                  : Icons.payment,
+              onPressed: paymentStatus == 'Payment Received'
+                  ? null
+                  : _showPaymentDialog, // Disable if payment received
+              backgroundColor: paymentStatus == 'Payment Received'
+                  ? AppTheme.successGreen
+                  : null, // Green when payment received
+              textColor: paymentStatus == 'Payment Received'
+                  ? Colors.white
+                  : null,
             ),
           ],
         ),
@@ -681,7 +753,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildUPIForm() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16), // Reduced padding
         child: Column(
           children: [
             Text(
@@ -691,10 +763,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 color: AppTheme.primaryGreen,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'Amount',
+              hintText: 'Enter payment amount',
+              controller: amountCtrl,
+              focusNode: _amountFocusNode,
+              prefixIcon: Icons.currency_rupee,
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 16),
             Container(
-              width: 200,
-              height: 200,
+              width: 180, // Reduced size
+              height: 180, // Reduced size
               decoration: BoxDecoration(
                 border: Border.all(color: AppTheme.primaryGreen, width: 2),
                 borderRadius: BorderRadius.circular(12),
@@ -703,31 +784,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.qr_code, size: 100, color: AppTheme.primaryGreen),
+                  Icon(
+                    Icons.qr_code,
+                    size: 80,
+                    color: AppTheme.primaryGreen,
+                  ), // Reduced size
                   const SizedBox(height: 8),
                   Text(
                     'QR Code Here',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               'Wait for customer to complete payment',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[700],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: CustomButton(
-                    text: 'Payment Received',
+                    text: 'Received',
                     icon: Icons.check,
                     onPressed: () {
                       setState(() {
@@ -735,12 +820,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         showQRCode = false;
                       });
                       _slideController.reverse();
+                      _houseFocusNode.unfocus(); // Unfocus when done
                     },
                     backgroundColor: AppTheme.successGreen,
                     textColor: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8), // Reduced spacing
                 Expanded(
                   child: CustomButton(
                     text: 'Pending',
@@ -751,6 +837,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         showQRCode = false;
                       });
                       _slideController.reverse();
+                      _houseFocusNode.unfocus(); // Unfocus when done
                     },
                     isPrimary: false,
                   ),
@@ -766,7 +853,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildCashForm() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16), // Reduced padding
         child: Column(
           children: [
             Text(
@@ -776,20 +863,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 color: AppTheme.primaryGreen,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             CustomTextField(
               label: 'Amount',
               hintText: 'Enter payment amount',
               controller: amountCtrl,
+              focusNode: _amountFocusNode,
               prefixIcon: Icons.currency_rupee,
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
                   child: CustomButton(
-                    text: 'Payment Received',
+                    text: 'Received',
                     icon: Icons.check,
                     onPressed: () {
                       setState(() {
@@ -797,12 +885,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         showCashForm = false;
                       });
                       _slideController.reverse();
+                      _houseFocusNode.unfocus(); // Unfocus when done
                     },
                     backgroundColor: AppTheme.successGreen,
                     textColor: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8), // Reduced spacing
                 Expanded(
                   child: CustomButton(
                     text: 'Pending',
@@ -813,6 +902,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         showCashForm = false;
                       });
                       _slideController.reverse();
+                      _houseFocusNode.unfocus(); // Unfocus when done
                     },
                     isPrimary: false,
                   ),

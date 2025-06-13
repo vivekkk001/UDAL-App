@@ -22,12 +22,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late Animation<double> _fadeAnimation;
 
   // Hardcoded credentials
-  final Map<String, String> _hardcodedCredentials = {
-    'WORKER001': 'password123',
-    'WORKER002': 'worker123', 
-    'WORKER003': 'pickup123',
-    'ADMIN': 'admin@123',
-  };
+  final Map<String, String> _hardcodedCredentials = {'ID1234': '1234'};
 
   @override
   void initState() {
@@ -36,13 +31,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.forward();
   }
 
@@ -77,25 +68,25 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     await Future.delayed(const Duration(seconds: 1));
 
     // Check credentials
-    if (_hardcodedCredentials.containsKey(workerId) && 
+    if (_hardcodedCredentials.containsKey(workerId) &&
         _hardcodedCredentials[workerId] == password) {
-      
       // Login successful
       if (mounted) {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => 
+            pageBuilder: (context, animation, secondaryAnimation) =>
                 HomePage(workerId: workerId),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(1.0, 0.0),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              );
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1.0, 0.0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  );
+                },
           ),
         );
       }
@@ -109,15 +100,22 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenHeight < 700;
+
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppTheme.backgroundLight,
-              Color(0xFFE8F5F3),
+              Color(0xFF20B2AA), // Light Sea Green
+              Color(0xFF008B8B), // Dark Cyan
+              Color(0xFF006666), // Darker Teal
             ],
           ),
         ),
@@ -125,23 +123,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.06, // 6% of screen width
+                vertical: isSmallScreen ? 16 : 24,
+              ),
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
-                  
+                  SizedBox(height: isSmallScreen ? 20 : 40),
+
                   // Logo and Header
-                  _buildHeader(),
-                  
-                  const SizedBox(height: 48),
-                  
+                  _buildHeader(isSmallScreen),
+
+                  SizedBox(height: isSmallScreen ? 24 : 32),
+
                   // Login Form
-                  _buildLoginForm(),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Demo Credentials
-                  _buildDemoCredentials(),
+                  _buildLoginForm(screenWidth, isSmallScreen),
+
+                  SizedBox(height: isSmallScreen ? 20 : 32),
                 ],
               ),
             ),
@@ -151,220 +149,179 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isSmallScreen) {
     return Column(
       children: [
         // Logo Container
         Container(
-          width: 120,
-          height: 120,
+          width: isSmallScreen ? 100 : 130,
+          height: isSmallScreen ? 90 : 120,
           decoration: BoxDecoration(
-            gradient: AppTheme.primaryGradient,
+            color: const Color.fromARGB(255, 246, 244, 244),
             borderRadius: BorderRadius.circular(30),
             boxShadow: AppTheme.cardShadow,
           ),
-          child: const Icon(
-            Icons.local_shipping_rounded,
-            size: 60,
-            color: Colors.white,
+          child: ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [
+                Color(0xFF20B2AA), // Light Sea Green
+                Color(0xFF008B8B), // Dark Cyan
+                Color(0xFF006666), // Darker Teal
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
+            child: Icon(
+              Icons.local_shipping_rounded,
+              size: isSmallScreen ? 45 : 60,
+              color: Colors.white,
+            ),
           ),
         ),
-        
-        const SizedBox(height: 24),
-        
+
+        SizedBox(height: isSmallScreen ? 20 : 28),
+
         // App Title
         Text(
-          'Municipality',
+          'UDAL',
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppTheme.primaryGreen,
+            color: Colors.white,
+            fontSize: isSmallScreen ? 32 : null,
           ),
+          textAlign: TextAlign.center,
         ),
-        
-        Text(
-          'Pickup Logger',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: AppTheme.secondaryTeal,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        
+
         const SizedBox(height: 8),
-        
+
+        // Subtitle with proper text wrapping
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'Municipal Waste Collection Management App',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: isSmallScreen ? 18 : 24,
+              height: 1.2,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+
+        SizedBox(height: isSmallScreen ? 8 : 12),
+
         Text(
           'Worker Portal',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Colors.grey[600],
+            color: Colors.white.withOpacity(0.9),
+            fontWeight: FontWeight.w500,
+            fontSize: isSmallScreen ? 14 : 16,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildLoginForm() {
-    return Card(
-      elevation: 4,
-      shadowColor: AppTheme.shadowColor,
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Sign In',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textDark,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            
-            const SizedBox(height: 8),
-            
-            Text(
-              'Enter your credentials to access the system',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            
-            const SizedBox(height: 32),
-
-            // Error Message
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: StatusCard(
-                  title: 'Login Failed',
-                  message: _errorMessage!,
-                  type: StatusType.error,
-                ),
-              ),
-
-            // Worker ID Field
-            CustomTextField(
-              label: 'Worker ID',
-              hintText: 'Enter your worker ID',
-              controller: workerIdCtrl,
-              prefixIcon: Icons.person_outline,
-              keyboardType: TextInputType.text,
-              isRequired: true,
-              onSubmitted: (_) => _login(),
-            ),
-            
-            const SizedBox(height: 20),
-
-            // Password Field
-            CustomTextField(
-              label: 'Password',
-              hintText: 'Enter your password',
-              controller: passwordCtrl,
-              prefixIcon: Icons.lock_outline,
-              suffixIcon: _obscurePassword ? Icons.visibility : Icons.visibility_off,
-              onSuffixIconPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
-              obscureText: _obscurePassword,
-              isRequired: true,
-              onSubmitted: (_) => _login(),
-            ),
-            
-            const SizedBox(height: 32),
-
-            // Login Button
-            CustomButton(
-              text: 'Sign In',
-              onPressed: _login,
-              icon: Icons.login,
-              isLoading: _isLoading,
-            ),
-          ],
-        ),
+  Widget _buildLoginForm(double screenWidth, bool isSmallScreen) {
+    return Container(
+      width: double.infinity,
+      constraints: BoxConstraints(
+        maxWidth: screenWidth > 600 ? 400 : double.infinity,
       ),
-    );
-  }
+      child: Card(
+        elevation: 4,
+        shadowColor: AppTheme.shadowColor,
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: EdgeInsets.all(isSmallScreen ? 20.0 : 28.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Sign In',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                  fontSize: isSmallScreen ? 24 : null,
+                ),
+                textAlign: TextAlign.center,
+              ),
 
-  Widget _buildDemoCredentials() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: AppTheme.primaryGreen,
-                  size: 20,
+              const SizedBox(height: 8),
+
+              Text(
+                'Enter your credentials to access the system',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[600],
+                  fontSize: isSmallScreen ? 13 : 14,
+                  height: 1.3,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'Demo Credentials',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryGreen,
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            Text(
-              'Use any of these credentials for testing:',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[700],
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            ..._hardcodedCredentials.entries.map((entry) => 
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.backgroundLight,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.borderGrey),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${entry.key} / ${entry.value}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'monospace',
-                            color: AppTheme.textDark,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.copy, size: 16),
-                        onPressed: () {
-                          // Copy to clipboard functionality could be added here
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Copied: ${entry.key}'),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
-                        },
-                        color: AppTheme.primaryGreen,
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
-                      ),
-                    ],
+
+              SizedBox(height: isSmallScreen ? 20 : 28),
+
+              // Error Message
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: StatusCard(
+                    title: 'Login Failed',
+                    message: _errorMessage!,
+                    type: StatusType.error,
                   ),
                 ),
+
+              // Worker ID Field
+              CustomTextField(
+                label: 'Worker ID',
+                hintText: 'Enter your worker ID',
+                controller: workerIdCtrl,
+                prefixIcon: Icons.person_outline,
+                keyboardType: TextInputType.text,
+                isRequired: true,
+                onSubmitted: (_) => _login(),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 18),
+
+              // Password Field
+              CustomTextField(
+                label: 'Password',
+                hintText: 'Enter your password',
+                controller: passwordCtrl,
+                prefixIcon: Icons.lock_outline,
+                suffixIcon: _obscurePassword
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+                onSuffixIconPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+                obscureText: _obscurePassword,
+                isRequired: true,
+                onSubmitted: (_) => _login(),
+              ),
+
+              SizedBox(height: isSmallScreen ? 24 : 32),
+
+              // Login Button
+              CustomButton(
+                text: 'Sign In',
+                onPressed: _login,
+                icon: Icons.login,
+                isLoading: _isLoading,
+              ),
+            ],
+          ),
         ),
       ),
     );
