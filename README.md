@@ -1,16 +1,15 @@
-# udal_app
+# ♻️ Offline-First Waste Collection Management App
 
-A new Flutter project.
+An **offline-first Flutter app** to digitize household waste pickup logging and payment tracking in rural areas. Built to work seamlessly even with low connectivity and digital literacy challenges.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 📱 Features
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- ✅ **Worker Pickup Logging** (with photo, location, and household ID)
+- 📍 **Reverse Geocoding** to fetch and store human-readable addresses
+- 🖼️ **Image Capture** via camera
+- 🔄 **Sync Button** to simulate cloud sync with real-time status change
+- 💵 **Payment Tracking** (UPI and Cash options)
+- 📤 **Household SMS Confirmation** (Mocked chat-like UX)
+- 🧾 **Local Data Storage** using `Hive` (used in demo; replaceable with SQLite)
